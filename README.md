@@ -46,7 +46,7 @@ Contains configuration files for various services.
 #### src
 The base directory where the application source code is located. Mounted to `/var/www/html` within containers.
 
-## docker-compose.yml [↩️](#table-of-contents)
+## docker-compose.yml [↑](#table-of-contents)
 Defines services, volumes, networks, and mounts used in the Docker setup.
 
 Check the complete [Docker Cheat Sheet](./docker-cheats.md) for useful Docker commands.
@@ -77,7 +77,7 @@ Your **SSH keys** are mounted from `~/.ssh:/var/www/.ssh:cached`. This ensures t
 
 Finally, the **known hosts file** is mounted from `~/.ssh/known_hosts:/var/www/.ssh/known_hosts:cached`. This provides a list of SSH hosts your machine has connected to, ensuring smoother SSH operations within the container.
 
-## app [↩️](#table-of-contents)
+## app [↑](#table-of-contents)
 Nginx is configured to serve PHP applications, utilizing FastCGI for processing PHP files. The service supports both HTTP and HTTPS traffic.
 
 1. **User and Permissions**  
@@ -89,7 +89,7 @@ Nginx is configured to serve PHP applications, utilizing FastCGI for processing 
 4. **Logs**  
    Access and error logs are located at `/var/log/nginx/access.log` and `/var/log/nginx/error.log`, respectively. Monitor these logs for troubleshooting and performance analysis.
 
-## phpfpm [↩️](#table-of-contents)
+## phpfpm [↑](#table-of-contents)
 
 Installed PHP extensions are: `bcmath`, `bz2`, `calendar`, `exif`, `ftp`, `gd`, `gettext`, `intl`, `mbstring`, `mysqli`, `opcache`, `pcntl`, `pdo_mysql`, `soap`, `sockets`, `sodium`, `sysvmsg`, `sysvsem`, `sysvshm`, `xsl`, `zip`
 
@@ -101,7 +101,7 @@ Installed PHP extensions are: `bcmath`, `bz2`, `calendar`, `exif`, `ftp`, `gd`, 
 - nano and vi/vim! for sure ;)
 
 
-## supervisor [↩️](#table-of-contents)
+## supervisor [↑](#table-of-contents)
 
 The required background processes are the following:
 
@@ -148,7 +148,7 @@ oro_web_socket                                 RUNNING   pid 5163, uptime 0:00:0
 ```
 
 
-## postgres [↩️](#table-of-contents)
+## postgres [↑](#table-of-contents)
 This section covers the PostgreSQL database activities.
 
 To check if the database is running, log into the database:
@@ -178,7 +178,7 @@ gunzip < path/to/your/file.sql.gz | docker exec -i <container-id> psql -U root -
 docker exec -t <container-id> pg_dump -U root -d dev > path/to/your/file.sql
 ```
 
-## pgadmin [↩️](#table-of-contents)
+## pgadmin [↑](#table-of-contents)
 
 Access pgAdmin at:
 ```
@@ -192,7 +192,7 @@ http://localhost:1435
 You'll need to create a new server in pgAdmin to access the database. For database details, please refer to the [postgres](#postgres) section.
 
 
-## rabbitmq [↩️](#table-of-contents)
+## rabbitmq [↑](#table-of-contents)
 
 RabbitMQ is a message broker that facilitates communication between different components of the Oro application. It enables asynchronous processing of tasks, allowing for efficient handling of background jobs, notifications, and real-time messaging between services.
 
@@ -211,7 +211,7 @@ To check emails using MailCatcher, open your web browser and navigate to:
 http://localhost:1080
 ```
 
-## Credits [↩️](#table-of-contents)
+## Credits [↑](#table-of-contents)
 
 Some parts of this setup, especially the Elasticsearch configuration and the concepts of file management and mounts, are adapted from [Markshust's Docker Setup for Magento](https://github.com/markshust/docker-magento).
 

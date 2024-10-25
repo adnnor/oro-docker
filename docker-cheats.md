@@ -6,6 +6,7 @@ This file serves as a quick reference for useful Docker commands, helping you ma
 - [Containers](#containers)
 - [Volumes](#volumes)
 - [Networks](#networks)
+- [Logs](#logs)
 
 Please feel free to update this README.md if you notice anything that is missing. If you need a different version of Nginx or PHP, kindly fill out the form at [this link](https://docs.google.com/forms/d/1PA9piAEZfOT3rp3SQqsq8ASz2dIYLldU8lQQ-fPzvlQ/prefill).
 
@@ -81,13 +82,14 @@ docker network prune
 
 ```
 
-## 7. Checking Logs
+## Logs
 
 To view logs for a specific service, use:
 ```bash
+# logs for a single service
 docker-compose logs <service_name>
-```
-If you want to see logs for all services, simply run:
-```bash
+# to view the logs of a container in real-time
+docker-compose logs -f <service_name>
+# logs for all services
 docker-compose logs
 ```
