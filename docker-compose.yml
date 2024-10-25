@@ -3,9 +3,6 @@ version: "3"
 services:
   app:
     image: adnnor/nginx:1.18
-    ports:
-      - "80:8000"
-      - "443:8443"
     volumes: &appvolumes
       - ~/.composer:/var/www/.composer:cached
       - ~/.ssh:/var/www/.ssh:cached
@@ -15,7 +12,13 @@ services:
       - ./conf/.env-app.local:/var/www/html/.env-app.local:cached
       - sockdata:/sock
       - ssldata:/etc/nginx/certs
-
+    networks:
+      - oro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.project1.rule=Host(`project1.local`)"
+      - "traefik.http.services.project1.loadbalancer.server.port=8000"
+      
   phpfpm:
     image: adnnor/php:8.3-fpm
     volumes: *appvolumes
@@ -23,30 +26,55 @@ services:
       - oro
     env_file: env/phpfpm.env
 
+  traefik:
+    image: traefik:v2.5
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+      - "8082:8082"
+    networks:
+      - oro
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./traefik.yml:/etc/traefik/traefik.yml"
+      - "./acme.json:/acme.json"
+    labels:
+      - "traefik.enable=true"
+      # Web traffic routing for project1
+      #- "traefik.http.routers.traefik-project1.rule=Host(`traefik.project1.local`)"
+      - "traefik.http.services.traefik-project1.loadbalancer.server.port=8000"
+      # Dashboard access
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.project1.local`)"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080"      
+
+#  supervisor:
+#    image: adnnor/supervisor
+#    volumes:
+#      - ./src:/var/www/html
+#      - ./conf/supervisord.conf:/etc/supervisord.conf
+#    depends_on:
+#      - phpfpm
+#    networks:
+#      - oro
+#    restart: always
+#    command: /bin/sh -c "rm -f /tmp/supervisor.sock && supervisord -n"
+
   postgres:
     image: postgres:latest
     command:
       - "--max_connections=200"
       - "--shared_buffers=256MB"
-    ports:
-      - "5432:5432"
     env_file: env/postgres.env
     networks:
       - oro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.postgres-project1.rule=HostSNI(`postgres.project1.local`)"
+      - "traefik.tcp.services.postgres-project1.loadbalancer.server.port=5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      
-  supervisor:
-    image: adnnor/supervisor
-    volumes:
-      - ./src:/var/www/html
-      - ./conf/supervisord.conf:/etc/supervisord.conf
-    depends_on:
-      - phpfpm
-    networks:
-      - oro
-    restart: always
-    command: /bin/sh -c "rm -f /tmp/supervisor.sock && supervisord -n"
         
   pgadmin:
     image: dpage/pgadmin4
@@ -55,17 +83,20 @@ services:
     env_file: env/pgadmin.env
     networks:
       - oro    
-    ports:
-      - "1435:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin-project1.rule=Host(`pgadmin.project1.local`)"
+      - "traefik.http.services.pgadmin-project1.loadbalancer.server.port=80"
     volumes:
     - pgadmin-data:/var/lib/pgadmin
     restart: always
 
   elasticsearch:
     image: adnnor/elasticsearch:8.4
-    ports:
-      - "9200:9200"
-      - "9300:9300"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.elasticsearch.rule=Host(`elasticsearch.project1.local`)"
+      - "traefik.http.services.elasticsearch.loadbalancer.server.port=9200"
     env_file: env/elasticsearch.env
     environment:
       - "discovery.type=single-node"
@@ -78,25 +109,24 @@ services:
       ## Uncomment to increase the virtual memory map count
       - "max_map_count=262144"
             
-  redis:
-    image: redis:6.0-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
+#  redis:
+#    image: redis:6.0-alpine
+#    ports:
+#      - "6379:6379"
       
-  rabbitmq:
-    image: rabbitmq:3.11-management-alpine
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    volumes:
-      - rabbitmqdata:/var/lib/rabbitmq
-    env_file: env/rabbitmq.env
+#  rabbitmq:
+#    image: rabbitmq:3.11-management-alpine
+#    ports:
+#      - "15672:15672"
+#      - "5672:5672"
+#    volumes:
+#      - rabbitmqdata:/var/lib/rabbitmq
+#    env_file: env/rabbitmq.env
     
-  mailcatcher:
-    image: sj26/mailcatcher
-    ports:
-      - "1080:1080"
+#  mailcatcher:
+#    image: sj26/mailcatcher
+#    ports:
+#      - "1080:1080"
       
 networks:
   oro:
