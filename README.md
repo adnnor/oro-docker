@@ -1,6 +1,6 @@
 # Docker setup for Oro Commerce
 
-This guide provides an overview of managing your docker setup that includes PHP, Nginx, OpenSearch, PostgreSQL, pgAdmin, Redis, Supervisor and MailCatcher. You will learn how to start and s↑ containers, access specific services, check the database and email systems, and more.
+This guide provides an overview of managing your docker setup that includes PHP, Nginx, OpenSearch, PostgreSQL, pgAdmin, Redis, Supervisor and MailCatcher. You will learn how to start and stop containers, access specific services, check the database and email systems, and more.
 
 
 ## Table of Contents
