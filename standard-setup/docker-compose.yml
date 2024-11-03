@@ -1,0 +1,112 @@
+version: "3"
+
+services:
+  app:
+    image: adnnor/nginx:1.18
+    ports:
+      - "80:8000"
+      - "443:8443"
+    volumes: &appvolumes
+      - ~/.composer:/var/www/.composer:cached
+      - ~/.ssh:/var/www/.ssh:cached
+      - ~/.ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+      - ./src:/var/www/html:cached
+      - ./conf/nginx.default.conf:/etc/nginx/conf.d/default.conf:cached
+      - ./conf/.env-app.local:/var/www/html/.env-app.local:cached
+      - sockdata:/sock
+      - ssldata:/etc/nginx/certs
+
+  phpfpm:
+    image: adnnor/php:8.3-fpm
+    volumes: *appvolumes
+    networks:
+      - oro
+    env_file: env/phpfpm.env
+
+  postgres:
+    image: postgres:latest
+    command:
+      - "--max_connections=200"
+      - "--shared_buffers=256MB"
+    ports:
+      - "5432:5432"
+    env_file: env/postgres.env
+    networks:
+      - oro
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      
+  supervisor:
+    image: adnnor/supervisor
+    volumes:
+      - ./src:/var/www/html
+      - ./conf/supervisord.conf:/etc/supervisord.conf
+    depends_on:
+      - phpfpm
+    networks:
+      - oro
+    restart: always
+    command: /bin/sh -c "rm -f /tmp/supervisor.sock && supervisord -n"
+        
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    env_file: env/pgadmin.env
+    networks:
+      - oro    
+    ports:
+      - "1435:80"
+    volumes:
+    - pgadmin-data:/var/lib/pgadmin
+    restart: always
+
+  elasticsearch:
+    image: adnnor/elasticsearch:8.4
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    env_file: env/elasticsearch.env
+    environment:
+      - "discovery.type=single-node"
+      ## Avoid test failures due to small disks
+      ## More info at https://github.com/markshust/docker-magento/issues/488
+      - "cluster.routing.allocation.disk.threshold_enabled=false"
+      - "index.blocks.read_only_allow_delete"
+      ## Uncomment to set custom heap size to avoid memory errors
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      ## Uncomment to increase the virtual memory map count
+      - "max_map_count=262144"
+            
+  redis:
+    image: redis:6.0-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+      
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    env_file: env/rabbitmq.env
+    
+  mailcatcher:
+    image: sj26/mailcatcher
+    ports:
+      - "1080:1080"
+      
+networks:
+  oro:
+    driver: bridge
+    
+volumes:
+  appdata:
+  dbdata:
+  rabbitmqdata:
+  pgadmin-data:
+  sockdata:
+  ssldata:
+  postgres-data:
