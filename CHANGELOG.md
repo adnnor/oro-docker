@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0]
+## [1.1]
 - Added Traefik to support multiple projects at a time
 - Added Traefik instructions under traefik.md
 - Added test directory to test Traefik for two projects
