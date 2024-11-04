@@ -36,8 +36,8 @@ services:
       - oro
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./traefik.yml:/etc/traefik/traefik.yml"
-      - "./acme.json:/acme.json"
+      - "./conf/traefik.yml:/etc/traefik/traefik.yml"
+      - "./conf/acme.json:/acme.json"
     labels:
       - "traefik.enable=true"
       # Dashboard access
@@ -45,17 +45,17 @@ services:
       - "traefik.http.routers.traefik-dashboard-vibe.service=api@internal"
       #- "traefik.http.services.traefik-dashboard-vibe.loadbalancer.server.port=8083"      
 
-#  supervisor:
-#    image: adnnor/supervisor
-#    volumes:
-#      - ./src:/var/www/html
-#      - ./conf/supervisoro2network.conf:/etc/supervisoro2network.conf
-#    depends_on:
-#      - phpfpm
-#    networks:
-#      - oro
-#    restart: always
-#    command: /bin/sh -c "rm -f /tmp/supervisor.sock && supervisoro2network -n"
+  supervisor:
+    image: adnnor/supervisor
+    volumes:
+      - ./src:/var/www/html
+      - ./conf/supervisord.conf:/etc/supervisord.conf
+    depends_on:
+      - phpfpm
+    networks:
+      - oro
+    restart: always
+    command: /bin/sh -c "rm -f /tmp/supervisor.sock && supervisoro2network -n"
 
   postgres:
     image: postgres:latest
@@ -105,24 +105,27 @@ services:
       ## Uncomment to increase the virtual memory map count
       - "max_map_count=262144"
             
-#  redis:
-#    image: redis:6.0-alpine
-#    ports:
-#      - "6379:6379"
-      
-#  rabbitmq:
-#    image: rabbitmq:3.11-management-alpine
-#    ports:
-#      - "15672:15672"
-#      - "5672:5672"
-#    volumes:
-#      - rabbitmqdata:/var/lib/rabbitmq
-#    env_file: env/rabbitmq.env
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    env_file: env/rabbitmq.env
+    networks:
+      - oro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rabbitmq-ui-vibe.rule=Host(`rabbitmq.vibe.local`)"  # UI access
+      - "traefik.http.services.rabbitmq-ui-vibe.loadbalancer.server.port=15672"
+      - "traefik.tcp.services.rabbitmq-amqp-vibe.loadbalancer.server.port=5672"
     
-#  mailcatcher:
-#    image: sj26/mailcatcher
-#    ports:
-#      - "1080:1080"
+  mailcatcher:
+    image: sj26/mailcatcher
+    networks:
+      - oro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailcatcher-vibe.rule=Host(`mailcatcher.vibe.local`)"
+      - "traefik.http.services.mailcatcher-vibe.loadbalancer.server.port=1080"
       
 networks:
   oro:

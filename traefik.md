@@ -1,25 +1,21 @@
-# Traefik
+# Multi-Project Setup with Traefik
 
-TODOs
+This guide covers setting up multiple isolated Docker projects using Traefik for automated routing and load balancing. Starting with an example project, `mood`, you’ll quickly replicate the setup for additional projects like `vibe`, each with its unique URLs and independent configuration. Perfect for managing multiple Oro environments efficiently with Traefik.
 
-Correct PHP extensions under phpfpm remove mysql add pdo or postgres
-Correct path of Credits in TOC
-Upload Change log to master
-rename test-traefik to test
-rename project1 to mood
-rename project2 to vibe
+When integrating Traefik into your Docker setup, it's important to note that your existing hostnames for services like PostgreSQL, Elasticsearch, Redis, and RabbitMQ will remain unchanged. You will continue to access:
 
+- PostgreSQL at `postgres`
+- Elasticsearch at `elasticsearch`
+- Redis at `redis`
+- RabbitMQ at `rabbitmq`
 
+For example, when connecting to the PostgreSQL database, you can use the following command with the username and password set to `root`:
 
+```bash
+psql -h postgres -U root -d dev
+```
 
-Traefik makes running multiple Docker projects easy with a few adjustments. By setting `COMPOSE_PROJECT_NAME` in a `.env` file, you assign unique project names, isolating container and network names to avoid conflicts. Setting unique hostnames in Traefik labels allows each instance to route traffic to its own services, ensuring projects run independently with separate configurations and customized routing.
-
-If you skip setting `COMPOSE_PROJECT_NAME`, Docker Compose defaults to the directory name as the project name. While this can prevent conflicts, explicitly defining project names provides more control and avoids potential confusion in complex directory setups.
-
-Traefik can be used for both single and multi-project setups. Traefik is great for handling automated routing, load balancing, and hostname management, but if you don’t need advanced routing, you can easily manage ports and networks manually. 
-
-For simpler setup, check out the standard Docker guide [here](./standard-setup) if you’re working on a single project.
-
+This consistency ensures that while Traefik enhances your routing and management capabilities, your service URLs remain the same, preventing any confusion in your workflow.
 
 ## Table of Contents
 
@@ -61,13 +57,23 @@ Next, create a new directory named `mood`, clone this repository into it, and en
 
 Add the following URLs to your `/etc/hosts` file:
 
-- `mood.local`
-- `pgadmin.mood.local`
-- `traefik.mood.local`
+- 127.0.0.1 mood.local
+- 127.0.0.1 pgadmin.mood.local
+- 127.0.0.1 traefik.mood.local
+- 127.0.0.1 rabbitmq.mood.local
+- 127.0.0.1 mailcatcher.mood.local
+- 127.0.0.1 elasticsearch.mood.local
 
 Run `docker-compose up -d` to start the containers. Ensure you have Docker set up on your machine; if not, please refer to the official documentation and **confirm that Docker is running without requiring sudo**.
 
 Once the command successfully brings up all the services, you’ll be able to access the specified URLs.
+
+- `mood.local`: The primary URL for accessing the main application.
+- `pgadmin.mood.local`: Access the pgAdmin interface for managing your PostgreSQL databases.
+- `traefik.mood.local`: The entry point for the Traefik dashboard to monitor and manage routes.
+- `rabbitmq.mood.local`: Connect to the RabbitMQ management interface for messaging services.
+- `mailcatcher.mood.local`: View and manage captured emails during development via Mailcatcher.
+- `elasticsearch.mood.local`: Access the Elasticsearch interface for managing search indexes and queries.
 
 ## Setup another project
 
@@ -81,7 +87,7 @@ This command creates an exact copy of `mood` in a new directory called `vibe`, i
 
 Next, open the `docker-compose.yml` file in the `vibe` directory. Replace all instances of `"mood"` with `"vibe"` throughout the file.
 
-Under the `traefik` service in `docker-compose.yml`, update the `ports` section to avoid conflicts with the first project:
+Under the `traefik` service in `docker-compose.yml`, update the `ports` section to avoid conflicts with the first project also make sure they are not in use by any other resources:
 
 ```yaml
 ports:
@@ -107,9 +113,12 @@ Note that while `nginx.conf` supports secure URLs, SSL is not yet set up here. Y
 
 Add the following URLs to your `/etc/hosts` file:
 
-- `vibe.local`
-- `pgadmin.vibe.local`
-- `traefik.vibe.local`
+- 127.0.0.1 vibe.local
+- 127.0.0.1 pgadmin.vibe.local
+- 127.0.0.1 traefik.vibe.local
+- 127.0.0.1 rabbitmq.vibe.local
+- 127.0.0.1 mailcatcher.vibe.local
+- 127.0.0.1 elasticsearch.vibe.local
 
 After making these changes, start the project by running:
 
@@ -122,4 +131,7 @@ This will set up `vibe` as a separate project with the following URLs:
 - `vibe.local:8088`
 - `pgadmin.vibe.local:8088`
 - `traefik.vibe.local:8088`
+- `rabbitmq.vibe.local:8088`
+- `mailcatcher.vibe.local:8088`
+- `elasticsearch.vibe.local:8088`
 

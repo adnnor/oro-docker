@@ -37,8 +37,8 @@ services:
       - oro
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./traefik.yml:/etc/traefik/traefik.yml"
-      - "./acme.json:/acme.json"
+      - "./conf/traefik.yml:/etc/traefik/traefik.yml"
+      - "./conf/acme.json:/acme.json"
     labels:
       - "traefik.enable=true"
       # Dashboard access
@@ -46,17 +46,17 @@ services:
       - "traefik.http.routers.traefik-dashboard-mood.service=api@internal"
       #- "traefik.http.services.traefik-dashboard-mood.loadbalancer.server.port=8080"      
 
-#  supervisor:
-#    image: adnnor/supervisor
-#    volumes:
-#      - ./src:/var/www/html
-#      - ./conf/supervisord.conf:/etc/supervisord.conf
-#    depends_on:
-#      - phpfpm
-#    networks:
-#      - oro
-#    restart: always
-#    command: /bin/sh -c "rm -f /tmp/supervisor.sock && supervisord -n"
+  supervisor:
+    image: adnnor/supervisor
+    volumes:
+      - ./src:/var/www/html
+      - ./conf/supervisord.conf:/etc/supervisord.conf
+    depends_on:
+      - phpfpm
+    networks:
+      - oro
+    restart: always
+    command: /bin/sh -c "rm -f /tmp/supervisor.sock && supervisord -n"
 
   postgres:
     image: postgres:latest
@@ -92,9 +92,11 @@ services:
     image: adnnor/elasticsearch:8.4
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elasticsearch.rule=Host(`elasticsearch.mood.local`)"
-      - "traefik.http.services.elasticsearch.loadbalancer.server.port=9200"
+      - "traefik.http.routers.elasticsearch-mood.rule=Host(`elasticsearch.mood.local`)"
+      - "traefik.http.services.elasticsearch-mood.loadbalancer.server.port=9200"
     env_file: env/elasticsearch.env
+    networks:
+      - oro
     environment:
       - "discovery.type=single-node"
       ## Avoid test failures due to small disks
@@ -105,25 +107,39 @@ services:
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       ## Uncomment to increase the virtual memory map count
       - "max_map_count=262144"
+      ## Prefer to disable security features on local
+      - "xpack.security.enabled=false"
             
-#  redis:
-#    image: redis:6.0-alpine
-#    ports:
-#      - "6379:6379"
+  redis:
+    image: redis:6.0-alpine
+    networks:
+      - oro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.services.redis-mood.loadbalancer.server.port=6379"
       
-#  rabbitmq:
-#    image: rabbitmq:3.11-management-alpine
-#    ports:
-#      - "15672:15672"
-#      - "5672:5672"
-#    volumes:
-#      - rabbitmqdata:/var/lib/rabbitmq
-#    env_file: env/rabbitmq.env
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    env_file: env/rabbitmq.env
+    networks:
+      - oro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rabbitmq-ui-mood.rule=Host(`rabbitmq.mood.local`)"  # UI access
+      - "traefik.http.services.rabbitmq-ui-mood.loadbalancer.server.port=15672"
+      - "traefik.tcp.services.rabbitmq-amqp-mood.loadbalancer.server.port=5672"
     
-#  mailcatcher:
-#    image: sj26/mailcatcher
-#    ports:
-#      - "1080:1080"
+  mailcatcher:
+    image: sj26/mailcatcher
+    networks:
+      - oro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailcatcher-mood.rule=Host(`mailcatcher.mood.local`)"
+      - "traefik.http.services.mailcatcher-mood.loadbalancer.server.port=1080"
+
       
 networks:
   oro:

@@ -11,6 +11,7 @@ This guide provides an overview of managing your docker setup that includes PHP,
   - [docker-compose.yml](#docker-composeyml)  
 - [Services](#services)
   - [app](#app)
+  - [traefik](#traefik)
   - [phpfpm](#phpfpm)
   - [supervisor](#supervisor)
   - [postgres](#postgres)
@@ -42,6 +43,8 @@ Contains configuration files for various services.
 - `nginx.default.conf`: Nginx configuration file.
 - `.env-app.local`: Environment file for Oro Commerce.
 - `supervisord.conf`: Supervisor configuration to manage background processes.
+- `traefik.yml`: Traefik configuration for routing and services.
+- `acme.json`: File for storing SSL certificates used by Traefik.
 
 #### src
 The base directory where the application source code is located. Mounted to `/var/www/html` within containers.
@@ -88,6 +91,19 @@ Nginx is configured to serve PHP applications, utilizing FastCGI for processing 
 
 4. **Logs**  
    Access and error logs are located at `/var/log/nginx/access.log` and `/var/log/nginx/error.log`, respectively. Monitor these logs for troubleshooting and performance analysis.
+
+## traefik[↑](#table-of-contents)
+
+Traefik makes running multiple Docker projects easy with a few adjustments. By setting `COMPOSE_PROJECT_NAME` in a `.env` file, you assign unique project names, isolating container and network names to avoid conflicts. Setting unique hostnames in Traefik labels allows each instance to route traffic to its own services, ensuring projects run independently with separate configurations and customized routing.
+
+If you skip setting `COMPOSE_PROJECT_NAME`, Docker Compose defaults to the directory name as the project name. While this can prevent conflicts, explicitly defining project names provides more control and avoids potential confusion in complex directory setups.
+
+Traefik can be used for both single and multi-project setups. Traefik is great for handling automated routing, load balancing, and hostname management, but if you don’t need advanced routing, you can easily manage ports and networks manually. 
+
+For simpler setup, check out the standard Docker guide [here](./standard-setup) if you’re working on a single project.
+
+For guidance on configuring multiple Docker projects with Traefik, refer to the [instructions here](./traefik.md).
+
 
 ## phpfpm[↑](#table-of-contents)
 
